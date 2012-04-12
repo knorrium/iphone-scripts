@@ -216,23 +216,46 @@ def fetch_reviews(software_id, store, pageNumber=0, *previous)
   end
 end
 
+# Prints the reviews in CSV format
+def outputCSV(reviews, store)
+  puts "store,date,version,author,rating,subject,review\n"
+
+  if reviews.any?
+    reviews.each_with_index do |review, index|
+      puts sprintf(%{"%s","%s","%s","%s","%s","%s","%s"\n},
+        store[:name],
+        review[:date],
+        review[:version],
+        review[:author],
+        review[:rating],
+        review[:subject],
+        review[:body])
+    end
+  end
+end
+
+# Prints the reviews in the standard format
+def outputStandard(reviews)
+
+  if reviews.any?
+    puts "=== Store: #{store[:name]}"
+    
+    reviews.each do review
+      puts sprintf(%{%s %s, "%s", by %s, for version %s, on %s},
+        review[:rating], review[:rating] > 1 ? "stars" : "star", review[:subject],
+        review[:author], review[:version], review[:date])
+      puts review[:body]
+      puts "--\n" if index + 1 < reviews.size
+    end
+  end
+end
+
 # a simple command-line presentation
 software.keys.sort.each do |software_key|
-  puts "== App: #{software_key}"
+  #puts "== App: #{software_key}"
 
   stores.sort_by { |a| a[:name] }.each do |store|
     reviews = fetch_reviews(software[software_key], store)
-
-    if reviews.any?
-      puts "=== Store: #{store[:name]}"
-      
-      reviews.each_with_index do |review, index|
-        puts sprintf(%{%s %s, "%s", by %s, for version %s, on %s},
-          review[:rating], review[:rating] > 1 ? "stars" : "star", review[:subject],
-          review[:author], review[:version], review[:date])
-        puts review[:body]
-        puts "--\n" if index + 1 < reviews.size
-      end
-    end
+    outputCSV(reviews, store)
   end
 end
