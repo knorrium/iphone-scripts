@@ -28,7 +28,7 @@ NATIVE_LANGUAGE = 'en'
 # MODIFY THIS HASH WITH YOUR APP SET (grab the itunes store urls & pull the id params)
 software = {
   # http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=289923007&mt=8
-  'Domain Scout' => 496552142,
+  'Domain Scout' => 289923007,
 }
 
 stores = [
