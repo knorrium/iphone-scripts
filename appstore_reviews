@@ -113,7 +113,10 @@ stores = [
   { :name => 'Uruguay',              :id => 143514, :language => 'es'    },
 ]
 
+# Enable to turn on debugging output
 DEBUG = false
+# Enable to save the source XML files from the App Store
+DEBUG_SAVE_SOURCE_XML = DEBUG && true
 
 TRANSLATE_URL = "http://ajax.googleapis.com/ajax/services/language/translate?"
 
@@ -180,7 +183,7 @@ def fetch_reviews(software_id, store, pageNumber=0, *previous)
   rawxml = `#{cmd}`
   
 
-  if defined ? (DEBUG) && DEBUG == true
+  if defined?(DEBUG) && DEBUG_SAVE_SOURCE_XML == true
     open("appreview.#{software_id}.#{store[:id]}.#{pageNumber}.xml", 'w') { |f| f.write(rawxml) }
   end
   
