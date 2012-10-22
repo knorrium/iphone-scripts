@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-#
+##
 # appstore_reviews
 #
 #  Fetch iTunes App Store reviews for each application, across all country stores, with translation
@@ -20,6 +20,7 @@
 require 'rubygems'
 require 'hpricot'
 require 'httparty'
+require 'csv'
 
 # MODIFY YOUR NATIVE LANGUAGE
 NATIVE_LANGUAGE = 'en'
@@ -27,7 +28,7 @@ NATIVE_LANGUAGE = 'en'
 # MODIFY THIS HASH WITH YOUR APP SET (grab the itunes store urls & pull the id params)
 software = {
   # http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=289923007&mt=8
-  'Domain Scout' => 289923007,
+  'Domain Scout' => 496552142,
 }
 
 stores = [
@@ -93,7 +94,7 @@ stores = [
   { :name => 'Venezuela',            :id => 143502, :language => 'es'    },
   { :name => 'Vietnam',              :id => 143471, :language => 'vi'    },
   { :name => 'Japan',                :id => 143462, :language => 'ja'    },
-
+  
   # stores added April 1, 2009
   { :name => 'Dominican Republic',   :id => 143508, :language => 'es'    },
   { :name => 'Ecuador',              :id => 143509, :language => 'es'    },
@@ -126,6 +127,7 @@ def translate(opts)
   return result['responseData']['translatedText']
 end
 
+##
 # Return the current review page number by parsing the page content
 def getCurrentPage(doc)
   currentPage = 1
@@ -138,6 +140,7 @@ def getCurrentPage(doc)
   return currentPage
 end
 
+##
 # Return the total number of review pages by parsing the page content
 def getNumberOfPages(doc)
   numberOfPages = 1
@@ -150,6 +153,7 @@ def getNumberOfPages(doc)
   return numberOfPages
 end
 
+##
 # return a rating/subject/author/body hash
 def fetch_reviews(software_id, store, pageNumber=0, *previous)
   reviews = []
@@ -160,17 +164,24 @@ def fetch_reviews(software_id, store, pageNumber=0, *previous)
   end
 
   # TODO: parameterize type=Purple+Software
+  # TODO: parameterize sortOrdering
+  #  Valid sortOrdering options are:
+  #   0/1 = Most Helpful
+  #    2  = Most Favorable
+  #    3  = Most Critical
+  #    4  = Most Recent
   cmd = sprintf(%{curl -s -A "iTunes/9.2 (Macintosh; U; Mac OS X 10.6" -H "X-Apple-Store-Front: %s-1" } <<
                 %{'http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=%s&} <<
-                %{pageNumber=%s&sortOrdering=1&type=Purple+Software' | xmllint --format --recover - 2>/dev/null},
+                %{pageNumber=%s&sortOrdering=4&type=Purple+Software' | xmllint --format --recover - 2>/dev/null},
                 store[:id],
                 software_id,
                 pageNumber)
 
   rawxml = `#{cmd}`
+  
 
-  if defined?(DEBUG) && DEBUG == true
-    open("appreview.#{software_id}.#{store[:id]}.xml", 'w') { |f| f.write(rawxml) }
+  if defined ? (DEBUG) && DEBUG == true
+    open("appreview.#{software_id}.#{store[:id]}.#{pageNumber}.xml", 'w') { |f| f.write(rawxml) }
   end
   
   doc = Hpricot.XML(rawxml)
@@ -216,27 +227,22 @@ def fetch_reviews(software_id, store, pageNumber=0, *previous)
   end
 end
 
+##
 # Prints the reviews in CSV format
 def outputCSV(reviews, store)
-  puts "store,date,version,author,rating,subject,review\n"
-
   if reviews.any?
-    reviews.each_with_index do |review, index|
-      puts sprintf(%{"%s","%s","%s","%s","%s","%s","%s"\n},
-        store[:name],
-        review[:date],
-        review[:version],
-        review[:author],
-        review[:rating],
-        review[:subject],
-        review[:body])
+    CSV.open("./reviews.csv", "wb") do |csv|
+      csv << ["store", "date", "version", "author", "rating", "subject", "review"]
+      reviews.each_with_index do |review, index|
+        csv << [store[:name], review[:date], review[:version], review[:author], review[:rating], review[:subject], review[:body]]
+      end
     end
   end
 end
 
+##
 # Prints the reviews in the standard format
 def outputStandard(reviews)
-
   if reviews.any?
     puts "=== Store: #{store[:name]}"
     
@@ -250,9 +256,9 @@ def outputStandard(reviews)
   end
 end
 
-# a simple command-line presentation
+##
+# A simple command-line presentation
 software.keys.sort.each do |software_key|
-  #puts "== App: #{software_key}"
 
   stores.sort_by { |a| a[:name] }.each do |store|
     reviews = fetch_reviews(software[software_key], store)
