@@ -174,8 +174,8 @@ def fetch_reviews(software_id, store, pageNumber=0, *previous)
   #    3  = Most Critical
   #    4  = Most Recent
   cmd = sprintf(%{curl -s -A "iTunes/9.2 (Macintosh; U; Mac OS X 10.6" -H "X-Apple-Store-Front: %s-1" } <<
-                %{'http://ax.phobos.apple.com.edgesuite.net/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=%s&} <<
-                %{pageNumber=%s&sortOrdering=4&type=Purple+Software' | xmllint --format --recover - 2>/dev/null},
+                %{'https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?} <<
+                %{sortOrdering=1&type=Purple+Software&mt=8&pageNumber=0&id=%s' | xmllint --format --recover - 2>/dev/null},
                 store[:id],
                 software_id,
                 pageNumber)
