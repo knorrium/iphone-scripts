@@ -94,7 +94,7 @@ stores = [
   { :name => 'Venezuela',            :id => 143502, :language => 'es'    },
   { :name => 'Vietnam',              :id => 143471, :language => 'vi'    },
   { :name => 'Japan',                :id => 143462, :language => 'ja'    },
-  
+
   # stores added April 1, 2009
   { :name => 'Dominican Republic',   :id => 143508, :language => 'es'    },
   { :name => 'Ecuador',              :id => 143509, :language => 'es'    },
@@ -134,12 +134,12 @@ end
 # Return the current review page number by parsing the page content
 def getCurrentPage(doc)
   currentPage = 1
-  
+
   doc.search("Document > View > ScrollView > VBoxView > View > MatrixView > VBoxView:nth(0) > HBoxView > TextView > SetFontStyle > b").each do |e|
     # Parse the first number in the string, e.g. the 3 in "Page 3 of 99"
     currentPage = e.inner_html[/[0-9]+/].to_i
   end
-  
+
   return currentPage
 end
 
@@ -147,12 +147,12 @@ end
 # Return the total number of review pages by parsing the page content
 def getNumberOfPages(doc)
   numberOfPages = 1
-  
+
   doc.search("Document > View > ScrollView > VBoxView > View > MatrixView > VBoxView:nth(0) > HBoxView > TextView > SetFontStyle > b").each do |e|
     # Parse the last number in the string, e.g. the 99 in "Page 3 of 99"
     numberOfPages = e.inner_html[/[0-9]+$/].to_i
   end
-  
+
   return numberOfPages
 end
 
@@ -160,7 +160,7 @@ end
 # return a rating/subject/author/body hash
 def fetch_reviews(software_id, store, pageNumber=0, *previous)
   reviews = []
-  
+
   # If passed a list of reviews then use that an add any new ones to it
   if previous.length > 0
     reviews = previous[0]
@@ -181,22 +181,22 @@ def fetch_reviews(software_id, store, pageNumber=0, *previous)
                 pageNumber)
 
   rawxml = `#{cmd}`
-  
+
 
   if defined?(DEBUG) && DEBUG_SAVE_SOURCE_XML == true
     open("appreview.#{software_id}.#{store[:id]}.#{pageNumber}.xml", 'w') { |f| f.write(rawxml) }
   end
-  
+
   doc = Hpricot.XML(rawxml)
 
   # Get current page nr
   currentPage = getCurrentPage(doc)
   # Get total number of pages
   numberOfPages = getNumberOfPages(doc)
-  
+
   doc.search("Document > View > ScrollView > VBoxView > View > MatrixView > VBoxView:nth(0) > VBoxView > VBoxView").each do |e|
     review = {}
-    
+
     strings = (e/:SetFontStyle)
     meta    = strings[2].inner_text.split(/\n/).map { |x| x.strip }
 
@@ -207,7 +207,7 @@ def fetch_reviews(software_id, store, pageNumber=0, *previous)
     review[:date]    = meta[10]
     review[:subject] = strings[0].inner_text.strip
     review[:body]    = strings[3].inner_html.gsub("<br />", "\n").strip
-    
+
     if ! store[:language].empty? && store[:language] != NATIVE_LANGUAGE
       begin
         review[:subject] = translate( :from => store[:language], :to => NATIVE_LANGUAGE, :text => review[:subject] )
@@ -218,7 +218,7 @@ def fetch_reviews(software_id, store, pageNumber=0, *previous)
         end
       end
     end
-    
+
     reviews << review
   end
 
@@ -248,7 +248,7 @@ end
 def outputStandard(reviews)
   if reviews.any?
     puts "=== Store: #{store[:name]}"
-    
+
     reviews.each do review
       puts sprintf(%{%s %s, "%s", by %s, for version %s, on %s},
         review[:rating], review[:rating] > 1 ? "stars" : "star", review[:subject],
