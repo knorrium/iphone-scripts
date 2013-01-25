@@ -245,11 +245,11 @@ end
 
 ##
 # Prints the reviews in the standard format
-def outputStandard(reviews)
+def outputStandard(reviews, store)
   if reviews.any?
     puts "=== Store: #{store[:name]}"
 
-    reviews.each do review
+    reviews.each_with_index do |review, index|
       puts sprintf(%{%s %s, "%s", by %s, for version %s, on %s},
         review[:rating], review[:rating] > 1 ? "stars" : "star", review[:subject],
         review[:author], review[:version], review[:date])
