@@ -3,7 +3,7 @@
 ##
 # appstore_reviews
 #
-#  Fetch iTunes App Store reviews for each application, across all country stores, with translation
+#  Fetch iTunes App Store reviews for each application, across all country stores
 #   -- reads rating, author, subject and review body
 #
 # Notes
@@ -21,9 +21,6 @@ require 'rubygems'
 require 'hpricot'
 require 'httparty'
 require 'csv'
-
-# MODIFY YOUR NATIVE LANGUAGE
-NATIVE_LANGUAGE = 'en'
 
 # MODIFY THIS HASH WITH YOUR APP SET (grab the itunes store urls & pull the id params)
 software = {
@@ -118,18 +115,6 @@ DEBUG = false
 # Enable to save the source XML files from the App Store
 DEBUG_SAVE_SOURCE_XML = DEBUG && true
 
-TRANSLATE_URL = "http://ajax.googleapis.com/ajax/services/language/translate?"
-
-def translate(opts)
-  from = opts[:from] == 'auto' ? '' : opts[:from]  # replace 'auto' with blank per Translate API
-  to   = opts[:to]
-
-  result = HTTParty.get(TRANSLATE_URL, :query => { :v => '1.0', :langpair => "#{from}|#{to}", :q => opts[:text] })
-
-  raise result['responseDetails'] if result['responseStatus'] != 200
-  return result['responseData']['translatedText']
-end
-
 ##
 # Return the current review page number by parsing the page content
 def getCurrentPage(doc)
@@ -207,17 +192,6 @@ def fetch_reviews(software_id, store, pageNumber=0, *previous)
     review[:date]    = meta[10]
     review[:subject] = strings[0].inner_text.strip
     review[:body]    = strings[3].inner_html.gsub("<br />", "\n").strip
-
-    if ! store[:language].empty? && store[:language] != NATIVE_LANGUAGE
-      begin
-        review[:subject] = translate( :from => store[:language], :to => NATIVE_LANGUAGE, :text => review[:subject] )
-        review[:body]    = translate( :from => store[:language], :to => NATIVE_LANGUAGE, :text => review[:body] )
-      rescue => e
-        if DEBUG
-          puts "** oops, cannot translate #{store[:name]}/#{store[:language]} => #{NATIVE_LANGUAGE}: #{e.message}"
-        end
-      end
-    end
 
     reviews << review
   end
